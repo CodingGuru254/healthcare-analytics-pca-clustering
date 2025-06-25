@@ -1,0 +1,6 @@
+- Explore patient data through visualization and summary statistics
+- Use PCA (Principal Component Analysis) for dimensionality reduction and visualization
+- Perform K-Means clustering to identify patient subgroups
+- Apply Logistic Regression to predict recovery outcomes
+- Conduct Cox Proportional Hazards modeling for survival analysis
+- Present clinical insights in an interpretable, visual form
