@@ -1,0 +1,70 @@
+uploaded = files.upload()
+
+import pandas as pd
+import numpy as np
+df = pd.read_csv("kitui_patient_data.csv")
+
+df.columns = df.columns.str.strip().str.lower()
+df['hiv_status'] = df['hiv_status'].astype('category')
+df['comorbidities'] = df['comorbidities'].astype('category')
+df['recovered'] = df['recovered'].astype('category')
+df['disease_outcome'] = df['disease_outcome'].astype('category')
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+sns.countplot(data=df, x='hiv_status', hue='disease_outcome')
+plt.title("Disease Outcome by HIV Status")
+plt.show()
+
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
+from sklearn.linear_model import LogisticRegression
+
+df_encoded = pd.get_dummies(df, columns=['hiv_status', 'comorbidities'], drop_first=True)
+
+features = ['age', 'weight', 'hemoglobin']
+X = df_encoded[features]
+X_scaled = StandardScaler().fit_transform(X)
+
+pca = PCA(n_components=2)
+pca_result = pca.fit_transform(X_scaled)
+df['PC1'], df['PC2'] = pca_result[:, 0], pca_result[:, 1]
+
+sns.scatterplot(data=df, x='PC1', y='PC2', hue='recovered')
+plt.title("PCA Projection Colored by Recovery")
+plt.show()
+
+kmeans = KMeans(n_clusters=3, random_state=42)
+df['cluster'] = kmeans.fit_predict(X_scaled)
+
+sns.scatterplot(data=df, x='PC1', y='PC2', hue='cluster', palette='tab10')
+plt.title("Patient Clusters (KMeans on PCA)")
+plt.show()
+
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, df_encoded['recovered'].astype('int'), test_size=0.2, random_state=42)
+model = LogisticRegression()
+model.fit(X_train, y_train)
+
+coef_df = pd.DataFrame(model.coef_[0], index=features, columns=["Coefficient"])
+print("\nLogistic Regression Coefficients:")
+print(coef_df)
+
+if 'survival_time' not in df.columns or 'event' not in df.columns:
+    np.random.seed(42)
+    df['survival_time'] = np.random.exponential(scale=10, size=len(df))
+    df['event'] = np.random.binomial(1, 0.7, size=len(df))  # 70% events
+
+!pip install lifelines --quiet
+from lifelines import CoxPHFitter
+
+survival_df = df[['survival_time', 'event'] + features]
+cox = CoxPHFitter()
+cox.fit(survival_df, duration_col='survival_time', event_col='event')
+cox.print_summary()
+
+cox.plot()
+plt.title("Cox Model Coefficients")
+plt.show()
