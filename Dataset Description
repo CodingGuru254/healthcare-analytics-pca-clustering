@@ -1,0 +1,10 @@
+The dataset contains the following columns:
+- `patient_id`: Unique identifier
+- `age`: Patient age
+- `weight`: Patient weight
+- `hemoglobin`: Hemoglobin levels
+- `hiv_status`: HIV positive or negative
+- `comorbidities`: Presence of other diseases
+- `recovered`: Whether the patient recovered
+- `disease_outcome`: Clinical disease outcome
+- `survival_time`: Time to event or censoring
